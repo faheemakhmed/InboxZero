@@ -4,20 +4,15 @@
   "description": "Email Triage & Auto-Reply System using AI",
   "main": "dist/index.js",
   "scripts": {
+    "install-all": "npm install && npx prisma generate",
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "npm install && npx prisma generate && tsc",
     "start": "node dist/index.js",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio"
   },
-  "keywords": [
-    "email",
-    "ai",
-    "automation",
-    "gemini",
-    "gmail"
-  ],
+  "keywords": ["email", "ai", "automation", "gemini", "gmail"],
   "author": "",
   "license": "MIT",
   "dependencies": {
