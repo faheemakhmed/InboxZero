@@ -1,0 +1,451 @@
+openapi: 3.0.3
+info:
+  title: InboxZero AI API
+  description: Email Triage & Auto-Reply System API
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/inboxzero-ai
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: ${SERVER_URL}
+    description: Production server
+
+basePath: /api
+
+tags:
+  - name: Health
+    description: System health and status endpoints
+  - name: Emails
+    description: Email management endpoints
+  - name: Processing
+    description: AI processing and classification
+  - name: Statistics
+    description: Statistics and reporting
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check API and service status including database, AI service, and Gmail integration
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /emails:
+    get:
+      summary: List all emails
+      description: Retrieve all emails with optional filtering by category and pagination
+      tags:
+        - Emails
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [urgent, reply, follow-up, ignore]
+          description: Filter emails by category
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+          description: Maximum number of emails to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Number of emails to skip for pagination
+      responses:
+        '200':
+          description: List of emails retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailListResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /emails/fetch:
+    post:
+      summary: Fetch emails from Gmail
+      description: Fetch emails from Gmail API and save to database. Uses mock mode if Gmail is not configured.
+      tags:
+        - Emails
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchEmailsRequest'
+            example:
+              limit: 10
+      responses:
+        '200':
+          description: Emails fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FetchEmailsResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /process:
+    post:
+      summary: Process email with AI
+      description: Classify email using AI and generate an intelligent auto-reply
+      tags:
+        - Processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessEmailRequest'
+            example:
+              emailId: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Email processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessEmailResponse'
+        '400':
+          description: Invalid request - email ID required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Email not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /reply:
+    post:
+      summary: Send generated reply
+      description: Send the AI-generated reply to the original sender. Optionally provide a custom reply override.
+      tags:
+        - Processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendReplyRequest'
+            example:
+              emailId: "550e8400-e29b-41d4-a716-446655440000"
+              customReply: "Thanks for your email. I'll get back to you soon."
+      responses:
+        '200':
+          description: Reply sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid request - email ID required or no reply available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Email not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /stats:
+    get:
+      summary: Get processing statistics
+      description: Retrieve statistics about email processing including total, processed, unprocessed counts and breakdown by category
+      tags:
+        - Statistics
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [healthy, degraded]
+              example: healthy
+            timestamp:
+              type: string
+              format: date-time
+              example: "2024-01-15T10:30:00.000Z"
+            services:
+              type: object
+              properties:
+                database:
+                  type: string
+                  example: connected
+                ai:
+                  type: string
+                  example: configured
+                gmail:
+                  type: string
+                  example: mock
+
+    Email:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        gmailId:
+          type: string
+          nullable: true
+          example: "msg123abc"
+        sender:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        subject:
+          type: string
+          example: "Meeting Request"
+        body:
+          type: string
+          example: "Hi, I'd like to schedule a meeting..."
+        category:
+          type: string
+          nullable: true
+          enum: [urgent, reply, follow-up, ignore]
+          example: reply
+        generatedReply:
+          type: string
+          nullable: true
+          example: "Hi John, I'd be happy to meet..."
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-01-15T10:30:00.000Z"
+        actionTaken:
+          type: string
+          nullable: true
+          enum: [flagged, draft_created, marked_for_later, archived, reply_sent]
+          example: draft_created
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00.000Z"
+
+    ClassificationResult:
+      type: object
+      properties:
+        category:
+          type: string
+          enum: [urgent, reply, follow-up, ignore]
+          example: reply
+        reason:
+          type: string
+          example: "Meeting request detected"
+
+    ReplyResult:
+      type: object
+      properties:
+        reply:
+          type: string
+          example: "Hi John, thank you for reaching out..."
+        tone:
+          type: string
+          example: professional
+
+    FetchEmailsRequest:
+      type: object
+      properties:
+        limit:
+          type: integer
+          default: 10
+          minimum: 1
+          maximum: 50
+          example: 10
+
+    FetchEmailsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            fetched:
+              type: integer
+              example: 10
+            saved:
+              type: integer
+              example: 5
+            emails:
+              type: array
+              items:
+                $ref: '#/components/schemas/Email'
+        message:
+          type: string
+          example: "Fetched and saved 5 new emails"
+
+    ProcessEmailRequest:
+      type: object
+      required:
+        - emailId
+      properties:
+        emailId:
+          type: string
+          format: uuid
+          description: ID of the email to process
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    ProcessEmailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            email:
+              $ref: '#/components/schemas/Email'
+            classification:
+              $ref: '#/components/schemas/ClassificationResult'
+            reply:
+              $ref: '#/components/schemas/ReplyResult'
+        message:
+          type: string
+          example: "Email classified as reply"
+
+    SendReplyRequest:
+      type: object
+      required:
+        - emailId
+      properties:
+        emailId:
+          type: string
+          format: uuid
+          description: ID of the email to reply to
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        customReply:
+          type: string
+          description: Optional custom reply to override the generated reply
+          example: "Thanks for your email..."
+
+    StatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            total:
+              type: integer
+              example: 100
+            processed:
+              type: integer
+              example: 75
+            unprocessed:
+              type: integer
+              example: 25
+            byCategory:
+              type: object
+              additionalProperties:
+                type: integer
+              example:
+                urgent: 10
+                reply: 40
+                follow-up: 15
+                ignore: 10
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        message:
+          type: string
+
+    EmailListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Email'
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Reply sent successfully"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Email not found"
+
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
