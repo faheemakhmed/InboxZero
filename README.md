@@ -6,7 +6,7 @@ A production-ready email automation system that fetches emails, classifies them 
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-green)
 
-## 🚀 Features
+##  Features
 
 - **Email Fetching** - Gmail API integration with mock fallback for testing
 - **AI Classification** - Categorize emails as urgent, reply, follow-up, or ignore using Gemini
@@ -15,7 +15,7 @@ A production-ready email automation system that fetches emails, classifies them 
 - **REST API** - Full API endpoints for integration
 - **Minimal Dashboard** - React UI showing emails, categories, and generated replies
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |-------|------------|
@@ -26,7 +26,7 @@ A production-ready email automation system that fetches emails, classifies them 
 | AI | Gemini API (easily swappable) |
 | Frontend | React 18 + Vite |
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 /src
@@ -45,7 +45,7 @@ A production-ready email automation system that fetches emails, classifies them 
     /hooks          # Custom hooks
 ```
 
-## 🔧 Setup
+##  Setup
 
 ### Prerequisites
 
@@ -89,7 +89,7 @@ GMAIL_REFRESH_TOKEN=your_refresh_token_here
 PORT=3000
 ```
 
-## 📡 API Endpoints
+##  API Endpoints
 
 | Method | Endpoint | Description |
 |--------|-----------|-------------|
@@ -122,7 +122,7 @@ curl -X POST http://localhost:3000/api/reply \
 curl http://localhost:3000/api/emails
 ```
 
-## 🔨 Development
+##  Development
 
 ```bash
 # Run backend in watch mode
@@ -137,7 +137,7 @@ cd client
 npm run dev
 ```
 
-## 📊 Demo Mode
+##  Demo Mode
 
 The project works out of the box without real API credentials:
 
@@ -151,7 +151,7 @@ To test:
 2. Call the fetch endpoint to load mock emails
 3. Process emails to see classification and replies
 
-## 🎯 Classification Logic
+##  Classification Logic
 
 | Category | Trigger Keywords | Action |
 |----------|------------------|--------|
@@ -160,7 +160,7 @@ To test:
 | follow-up | follow up, update, checking in | Mark for later |
 | ignore | newsletter, unsubscribe, promotional | Auto-archive |
 
-## 🔄 Swapping AI Providers
+##  Swapping AI Providers
 
 The `AIService` class in `/src/services/aiService.ts` is designed for easy swapping:
 
@@ -180,25 +180,16 @@ class AIService {
 }
 ```
 
-## 📈 Extra Features
+##  Extra Features
 
 - **Processing Time Logging** - Tracks how long each operation takes
 - **Retry Logic** - 3 retries with exponential backoff for failed API calls
 - **Caching** - Avoids reprocessing same emails within 5 minutes
 - **Rate Limit Handling** - Built-in error handling for API limits
 
-## 🔒 Security Notes
+##  Security Notes
 
 - Never commit real API keys to version control
 - Use environment variables for all secrets
 - The project includes `.gitignore` to exclude sensitive files
 
-## 📝 License
-
-MIT License - feel free to use for your portfolio!
-
-## 🙏 Acknowledgments
-
-- Gemini API for AI capabilities
-- Prisma for excellent ORM
-- Express.js for the web framework# InboxZero
